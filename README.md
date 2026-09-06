@@ -4,12 +4,11 @@
 
 
 
-Ad-free YouTube Music player for the Omarchy bar. Search, play, and control
-music directly from your bar — no browser needed, no ads, ever.
+YouTube Music player for the Omarchy bar. Search, play, and control
+music directly from your bar — no browser needed.
 
 Uses `yt-dlp` to search and resolve YouTube Music URLs, and `mpv` for
-native audio playback. Since playback goes through `mpv` (not a browser),
-all YouTube ads are completely bypassed.
+native audio playback.
 
 ## Features
 
