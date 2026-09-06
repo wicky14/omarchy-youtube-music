@@ -1,0 +1,6 @@
+# Build artifacts
+*.o
+*.qmlc
+
+# Runtime
+.omarchy-ytmusic/

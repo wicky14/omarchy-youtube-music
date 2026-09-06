@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "omakid.youtube-music",
+  "name": "YouTube Music",
+  "version": "1.0.0",
+  "author": "wicky14",
+  "description": "YouTube Music player with ad-free playback via yt-dlp + mpv. Search, play, and control music from the bar.",
+  "license": "MIT",
+  "kinds": [
+    "bar-widget",
+    "service"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml",
+    "service": "YouTubeMusicService.qml"
+  },
+  "barWidget": {
+    "displayName": "YouTube Music",
+    "description": "Ad-free YouTube Music player with search and playback controls",
+    "category": "Media",
+    "allowMultiple": false,
+    "defaultSection": "right"
+  }
+}
