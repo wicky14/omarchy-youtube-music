@@ -1,5 +1,9 @@
 # omakid.youtube-music
 
+<img width="517" height="644" alt="image" src="https://github.com/user-attachments/assets/2315fbd3-0230-4461-890e-6892e769b9e5" />
+
+
+
 Ad-free YouTube Music player for the Omarchy bar. Search, play, and control
 music directly from your bar — no browser needed, no ads, ever.
 
