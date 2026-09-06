@@ -42,14 +42,6 @@ From the Omarchy plugin marketplace:
 omarchy plugin add https://github.com/wicky14/omarchy-youtube-music.git --enable --yes
 ```
 
-Then add to `~/.config/omarchy/shell.json`:
-
-```json
-"right": [
-  { "id": "omakid.youtube-music" }
-]
-```
-
 Or install from a local checkout with the bundled script:
 
 ```bash
