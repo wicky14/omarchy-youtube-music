@@ -135,7 +135,9 @@ cp "$REPO_DIR/manifest.json" \
    "$REPO_DIR/BarWidget.qml" \
    "$REPO_DIR/YouTubeMusicService.qml" \
    "$REPO_DIR/SearchModel.js" \
+   "$REPO_DIR/ytmusic-player" \
    "$TARGET/"
+chmod +x "$TARGET/ytmusic-player"
 echo "Installed $PLUGIN_ID into $TARGET"
 
 # 2. Enable via omarchy CLI

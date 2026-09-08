@@ -15,6 +15,9 @@ all YouTube ads are completely bypassed.
 - **Volume** — slider in the popup or scroll wheel on the bar icon
 - **Now Playing** — scrolling title + artist in the bar when music is playing
 - **MPRIS** — integrates with Omarchy's built-in media controls automatically
+- **Restart-safe playback** — mpv runs detached, so `omarchy restart shell`
+  no longer kills your music; playback, queue, and position are restored
+  when the bar comes back
 
 ## Bar Controls
 
@@ -74,5 +77,6 @@ Or from a local checkout:
 - `BarWidget.qml` — bar icon with popup dropdown
 - `YouTubeMusicService.qml` — backend service (search + playback)
 - `SearchModel.js` — search result parsing helpers
+- `ytmusic-player` — detached mpv launcher (keeps music alive across restarts)
 - `install.sh` — install/uninstall script
 - `README.md` — this file

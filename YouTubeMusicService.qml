@@ -35,6 +35,8 @@ Item {
   readonly property string runtimePath: Quickshell.env("XDG_RUNTIME_DIR") + "/omarchy-ytmusic"
   readonly property string statusPath: runtimePath + "/status.json"
   readonly property string playerSocket: runtimePath + "/mpv-socket"
+  readonly property string playerPidPath: runtimePath + "/mpv.pid"
+  readonly property string playerScript: Qt.resolvedUrl("ytmusic-player").toString().replace(/^file:\/\//, "")
 
   readonly property var mprisPlayer: {
     var players = Mpris.players ? Mpris.players.values : []
@@ -132,15 +134,12 @@ Item {
     _suppressAutoNext = playProc.running
     playProc.running = false
     var args = [
-      "mpv",
-      "--no-video",
-      "--term-osd-bar",
-      "--input-ipc-server=" + playerSocket,
-      "--ytdl",
-      "--script-opts=ytdl_hook-ytdl_path=yt-dlp",
-      "--volume=" + String(pendingVolume >= 0 ? pendingVolume : playerVolume),
-      "--force-media-title=" + (title || "YouTube Music"),
-      url
+      root.playerScript,
+      "start",
+      url,
+      (title || "YouTube Music"),
+      (artist || ""),
+      String(pendingVolume >= 0 ? pendingVolume : playerVolume)
     ]
     playProc.command = args
     playProc.running = true
@@ -190,10 +189,15 @@ Item {
   function stop() {
     if (mprisPlayer && mprisPlayer.canPause) mprisPlayer.pause()
     sendMpvCommand(["stop"])
+    _suppressAutoNext = true
+    stopProc.command = [root.playerScript, "stop"]
+    stopProc.running = true
     playerRunning = false
     playerPaused = false
     playerTitle = ""
     playerArtist = ""
+    playerAlbum = ""
+    playerArtUrl = ""
     writeStatus()
   }
 
@@ -278,13 +282,35 @@ Item {
       position: playerPosition,
       length: playerLength,
       queueIndex: queueIndex,
-      queueLength: queue.length
+      queueLength: queue.length,
+      queue: queue
     }
     statusFile.setText(JSON.stringify(status) + "\n")
   }
 
-  function readStatus() {
-    statusReadProc.running = true
+  function handleRestore(data) {
+    var s
+    try { s = JSON.parse(data || "{}") } catch (e) { s = {} }
+    if (s.volume !== undefined && isFinite(Number(s.volume))) {
+      var v = Math.round(Number(s.volume))
+      v = Math.max(0, Math.min(100, v))
+      root.reportedVolume = v
+      if (root.pendingVolume < 0) root.playerVolume = v
+    }
+    if (Array.isArray(s.queue)) {
+      root.queue = s.queue
+      if (typeof s.queueIndex === "number" && s.queueIndex >= 0 && s.queueIndex < root.queue.length) {
+        root.queueIndex = Math.floor(s.queueIndex)
+      }
+      if (s.title) root.playerTitle = s.title
+      if (s.artist) root.playerArtist = s.artist
+      if (s.album) root.playerAlbum = s.album
+      if (s.artUrl) root.playerArtUrl = s.artUrl
+      if (s.length && isFinite(Number(s.length))) root.playerLength = Number(s.length)
+      root.playerRunning = !!s.running
+      root.playerPaused = !!s.paused
+      if (s.running) root.queryPosition()
+    }
   }
 
   function applyMprisState() {
@@ -354,17 +380,26 @@ Item {
       waitForEnd: false
     }
     onExited: function(code) {
-      root.playerRunning = false
-      root.playerPaused = false
-      root.playerTitle = ""
-      root.playerArtist = ""
-      root.writeStatus()
-      if (root._suppressAutoNext) {
+      if (!root._suppressAutoNext) {
+        // Genuine track end: clear "now playing" and advance the queue.
+        root.playerRunning = false
+        root.playerPaused = false
+        root.playerTitle = ""
+        root.playerArtist = ""
+        root.writeStatus()
+        if (root.queueIndex >= 0 && root.queueIndex < root.queue.length - 1) {
+          root.next()
+        }
+      } else {
+        // Intentional stop or restart: nothing to advance; just re-arm.
         root._suppressAutoNext = false
-      } else if (root.queueIndex >= 0 && root.queueIndex < root.queue.length - 1) {
-        root.next()
       }
     }
+  }
+
+  Process {
+    id: stopProc
+    onExited: function(code) {}
   }
 
   Socket {
@@ -383,25 +418,6 @@ Item {
       if (connected && pendingCommand !== "") {
         write(pendingCommand)
         pendingCommand = ""
-      }
-    }
-  }
-  Process {
-    id: statusReadProc
-    command: ["cat", root.statusPath]
-    stdout: StdioCollector {
-      waitForEnd: true
-      onStreamFinished: {
-        try {
-          var s = JSON.parse(text || "{}")
-          if (s.volume !== undefined) {
-            var v = Math.round(Number(s.volume))
-            if (isFinite(v)) {
-              root.reportedVolume = Math.max(0, Math.min(100, v))
-              if (root.pendingVolume < 0) root.playerVolume = root.reportedVolume
-            }
-          }
-        } catch (e) {}
       }
     }
   }
@@ -517,6 +533,44 @@ Item {
     command: ["mkdir", "-p", root.runtimePath]
     onExited: function(code) {
       root.statusReady = true
+      // After a restart there is no playProc running. Detect whether a
+      // detached mpv survived; if so, reconnect to it and restore state.
+      if (!root.playProc.running) {
+        checkPlayerProc.running = true
+      }
+    }
+  }
+
+  // Detect whether a detached mpv is still alive after a restart.
+  Process {
+    id: checkPlayerProc
+    command: [root.playerScript, "is-running"]
+    stdout: StdioCollector { waitForEnd: false }
+    onExited: function(code) {
+      if (code === 0) {
+        // mpv survived: restore playback state and treat it as current player.
+        root.playerRunning = true
+        readStatusProc.running = true
+      } else {
+        root.playerRunning = false
+        root.playerPaused = false
+        root.playerTitle = ""
+        root.playerArtist = ""
+        root.queue = []
+        root.queueIndex = -1
+      }
+    }
+  }
+
+  // Restore full queue/track/volume state from the persisted status.json.
+  Process {
+    id: readStatusProc
+    command: ["cat", root.statusPath]
+    stdout: StdioCollector {
+      waitForEnd: true
+      onStreamFinished: {
+        root.handleRestore(text)
+      }
     }
   }
 }
