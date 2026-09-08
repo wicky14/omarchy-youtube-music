@@ -1,11 +1,14 @@
 # omakid.youtube-music
 
-Ad-free YouTube Music player for the Omarchy bar. Search, play, and control
-music directly from your bar — no browser needed, no ads, ever.
+<img width="517" height="644" alt="image" src="https://github.com/user-attachments/assets/2315fbd3-0230-4461-890e-6892e769b9e5" />
+
+
+
+YouTube Music player for the Omarchy bar. Search, play, and control
+music directly from your bar — no browser needed.
 
 Uses `yt-dlp` to search and resolve YouTube Music URLs, and `mpv` for
-native audio playback. Since playback goes through `mpv` (not a browser),
-all YouTube ads are completely bypassed.
+native audio playback.
 
 ## Features
 
@@ -40,14 +43,6 @@ From the Omarchy plugin marketplace:
 
 ```bash
 omarchy plugin add https://github.com/wicky14/omarchy-youtube-music.git --enable --yes
-```
-
-Then add to `~/.config/omarchy/shell.json`:
-
-```json
-"right": [
-  { "id": "omakid.youtube-music" }
-]
 ```
 
 Or install from a local checkout with the bundled script:
