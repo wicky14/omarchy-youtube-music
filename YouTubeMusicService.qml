@@ -535,7 +535,7 @@ Item {
       root.statusReady = true
       // After a restart there is no playProc running. Detect whether a
       // detached mpv survived; if so, reconnect to it and restore state.
-      if (!root.playProc.running) {
+      if (!playProc.running) {
         checkPlayerProc.running = true
       }
     }
