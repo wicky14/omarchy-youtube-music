@@ -313,6 +313,19 @@ BarWidget {
                     : "transparent"
                   borderSpec: Border.none()
 
+                  MouseArea {
+                    id: rowMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                      if (root.ytmService) {
+                        root.ytmService.playItem(resultRow.modelData, resultRow.index)
+                        searchField.text = ""
+                      }
+                    }
+                  }
+
                   Row {
                     anchors.fill: parent
                     anchors.leftMargin: Style.space(8)
@@ -407,19 +420,6 @@ BarWidget {
                       horizontalAlignment: Text.AlignRight
                     }
                   }
-
-                  MouseArea {
-                    id: rowMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                      if (root.ytmService) {
-                        root.ytmService.playItem(resultRow.modelData, resultRow.index)
-                        searchField.text = ""
-                      }
-                    }
-                  }
                 }
               }
 
@@ -484,6 +484,16 @@ BarWidget {
                       ? Style.hoverFillFor(root.bar.foreground, Color.accent)
                       : "transparent")
                   borderSpec: Border.none()
+
+                  MouseArea {
+                    id: fMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                      if (root.ytmService) root.ytmService.playFavorite(favRow.modelData)
+                    }
+                  }
 
                   Row {
                     anchors.fill: parent
@@ -551,16 +561,6 @@ BarWidget {
                     }
                   }
 
-                  MouseArea {
-                    id: fMouse
-                    anchors.fill: parent
-                    anchors.rightMargin: Style.space(28)
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                      if (root.ytmService) root.ytmService.playFavorite(favRow.modelData)
-                    }
-                  }
                 }
               }
             }
@@ -624,6 +624,20 @@ BarWidget {
                       ? Style.hoverFillFor(root.bar.foreground, Color.accent)
                       : "transparent")
                   borderSpec: Border.none()
+
+                  MouseArea {
+                    id: qMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                      if (root.ytmService && !root.ytmService.isCurrent(queueRow.modelData.id)) {
+                        root.ytmService.queueIndex = root.ytmService.queueIndexOf(queueRow.modelData.id)
+                        var item = root.ytmService.queue[root.ytmService.queueIndexOf(queueRow.modelData.id)]
+                        if (item) root.ytmService.playUrl(item.url, item.title, item.channel)
+                      }
+                    }
+                  }
 
                   Row {
                     anchors.fill: parent
@@ -706,21 +720,6 @@ BarWidget {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: if (root.ytmService) root.ytmService.removeFromQueueById(queueRow.modelData.id)
-                      }
-                    }
-                  }
-
-                  MouseArea {
-                    id: qMouse
-                    anchors.fill: parent
-                    anchors.rightMargin: Style.space(52)
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: {
-                      if (root.ytmService && !root.ytmService.isCurrent(queueRow.modelData.id)) {
-                        root.ytmService.queueIndex = root.ytmService.queueIndexOf(queueRow.modelData.id)
-                        var item = root.ytmService.queue[root.ytmService.queueIndexOf(queueRow.modelData.id)]
-                        if (item) root.ytmService.playUrl(item.url, item.title, item.channel)
                       }
                     }
                   }
