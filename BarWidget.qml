@@ -347,7 +347,7 @@ BarWidget {
                     }
 
                     Column {
-                      width: parent.width - Style.space(44) - Style.space(56)
+                      width: parent.width - Style.space(136)
                       anchors.verticalCenter: parent.verticalCenter
                       spacing: 1
 
@@ -370,6 +370,29 @@ BarWidget {
                         font.pixelSize: Style.font.caption
                         elide: Text.ElideRight
                         width: parent.width
+                      }
+                    }
+
+                    Text {
+                      textFormat: Text.PlainText
+                      text: root.ytmService && root.ytmService.isFavorite(resultRow.modelData.id) ? "\uf005" : "\uf006"
+                      color: root.ytmService && root.ytmService.isFavorite(resultRow.modelData.id)
+                        ? Color.accent
+                        : (sStarMouse.containsMouse ? root.bar.foreground : Qt.darker(root.bar.foreground, 1.5))
+                      font.family: root.bar.fontFamily
+                      font.pixelSize: Style.font.body
+                      anchors.verticalCenter: parent.verticalCenter
+                      width: Style.space(20)
+                      horizontalAlignment: Text.AlignHCenter
+
+                      MouseArea {
+                        id: sStarMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                          if (root.ytmService) root.ytmService.toggleFavorite(resultRow.modelData)
+                        }
                       }
                     }
 
@@ -417,8 +440,136 @@ BarWidget {
 
           Item {
             width: parent.width
-            height: searchField.text.length === 0 && root.ytmService && root.ytmService.queue && root.ytmService.queue.length > 0 ? queueCol.implicitHeight : 0
-            visible: searchField.text.length === 0 && root.ytmService && root.ytmService.queue && root.ytmService.queue.length > 0
+            height: searchField.text.length === 0 && root.ytmService && root.ytmService.favorites && root.ytmService.favorites.length > 0 ? favCol.implicitHeight : 0
+            visible: searchField.text.length === 0 && root.ytmService && root.ytmService.favorites && root.ytmService.favorites.length > 0
+
+            Column {
+              id: favCol
+              anchors.left: parent.left
+              anchors.right: parent.right
+              spacing: 0
+
+              PanelSeparator { foreground: root.bar.foreground }
+
+              Item {
+                width: parent.width
+                height: Style.space(32)
+
+                Text {
+                  anchors.left: parent.left
+                  anchors.leftMargin: Style.space(8)
+                  anchors.verticalCenter: parent.verticalCenter
+                  textFormat: Text.PlainText
+                  text: "FAVORITES (" + (root.ytmService ? root.ytmService.favorites.length : 0) + ")"
+                  color: Qt.darker(root.bar.foreground, 1.3)
+                  font.family: root.bar.fontFamily
+                  font.pixelSize: Style.font.caption
+                  font.bold: true
+                }
+              }
+
+              Repeater {
+                model: root.ytmService ? root.ytmService.favorites : []
+
+                BorderSurface {
+                  id: favRow
+                  required property var modelData
+                  required property int index
+                  width: favCol.width
+                  height: Style.space(44)
+                  radius: 0
+                  color: root.ytmService && root.ytmService.isCurrent(favRow.modelData.id)
+                    ? Style.selectedFillFor(root.bar.foreground, Color.accent)
+                    : (fMouse.containsMouse
+                      ? Style.hoverFillFor(root.bar.foreground, Color.accent)
+                      : "transparent")
+                  borderSpec: Border.none()
+
+                  Row {
+                    anchors.fill: parent
+                    anchors.leftMargin: Style.space(8)
+                    anchors.rightMargin: Style.space(8)
+                    spacing: Style.space(8)
+
+                    Text {
+                      textFormat: Text.PlainText
+                      text: root.ytmService && root.ytmService.isCurrent(favRow.modelData.id) ? "\uf04b" : (favRow.index + 1)
+                      color: root.bar.foreground
+                      font.family: root.bar.fontFamily
+                      font.pixelSize: root.ytmService && root.ytmService.isCurrent(favRow.modelData.id) ? Style.font.body : Style.font.caption
+                      width: Style.space(20)
+                      horizontalAlignment: Text.AlignHCenter
+                      anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Column {
+                      width: parent.width - Style.space(48)
+                      anchors.verticalCenter: parent.verticalCenter
+                      spacing: 1
+
+                      Text {
+                        textFormat: Text.PlainText
+                        text: favRow.modelData.title || "Unknown"
+                        color: root.bar.foreground
+                        font.family: root.bar.fontFamily
+                        font.pixelSize: Style.font.bodySmall
+                        font.bold: root.ytmService && root.ytmService.isCurrent(favRow.modelData.id)
+                        elide: Text.ElideRight
+                        width: parent.width
+                      }
+
+                      Text {
+                        textFormat: Text.PlainText
+                        text: favRow.modelData.channel || "Unknown"
+                        color: Qt.darker(root.bar.foreground, 1.5)
+                        font.family: root.bar.fontFamily
+                        font.pixelSize: Style.font.caption
+                        elide: Text.ElideRight
+                        width: parent.width
+                      }
+                    }
+
+                    Text {
+                      textFormat: Text.PlainText
+                      text: "\uf005"
+                      color: fStarMouse.containsMouse ? Color.accent : Qt.darker(Color.accent, 1.15)
+                      font.family: root.bar.fontFamily
+                      font.pixelSize: Style.font.body
+                      anchors.verticalCenter: parent.verticalCenter
+                      width: Style.space(20)
+                      horizontalAlignment: Text.AlignHCenter
+
+                      MouseArea {
+                        id: fStarMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                          if (root.ytmService) root.ytmService.toggleFavorite(favRow.modelData)
+                        }
+                      }
+                    }
+                  }
+
+                  MouseArea {
+                    id: fMouse
+                    anchors.fill: parent
+                    anchors.rightMargin: Style.space(28)
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                      if (root.ytmService) root.ytmService.playFavorite(favRow.modelData)
+                    }
+                  }
+                }
+              }
+            }
+          }
+
+          Item {
+            width: parent.width
+            height: searchField.text.length === 0 && root.ytmService && root.ytmService.visibleQueue && root.ytmService.visibleQueue.length > 0 ? queueCol.implicitHeight : 0
+            visible: searchField.text.length === 0 && root.ytmService && root.ytmService.visibleQueue && root.ytmService.visibleQueue.length > 0
 
             Column {
               id: queueCol
@@ -437,7 +588,7 @@ BarWidget {
                   anchors.leftMargin: Style.space(8)
                   anchors.verticalCenter: parent.verticalCenter
                   textFormat: Text.PlainText
-                  text: "QUEUE (" + (root.ytmService ? root.ytmService.queue.length : 0) + ")"
+                  text: "QUEUE (" + (root.ytmService ? root.ytmService.visibleQueue.length : 0) + ")"
                   color: Qt.darker(root.bar.foreground, 1.3)
                   font.family: root.bar.fontFamily
                   font.pixelSize: Style.font.caption
@@ -458,7 +609,7 @@ BarWidget {
               }
 
               Repeater {
-                model: root.ytmService ? root.ytmService.queue : []
+                model: root.ytmService ? root.ytmService.visibleQueue : []
 
                 BorderSurface {
                   id: queueRow
@@ -467,7 +618,7 @@ BarWidget {
                   width: queueCol.width
                   height: Style.space(44)
                   radius: 0
-                  color: root.ytmService && root.ytmService.queueIndex === queueRow.index
+                  color: root.ytmService && root.ytmService.isCurrent(queueRow.modelData.id)
                     ? Style.selectedFillFor(root.bar.foreground, Color.accent)
                     : (qMouse.containsMouse
                       ? Style.hoverFillFor(root.bar.foreground, Color.accent)
@@ -482,17 +633,17 @@ BarWidget {
 
                     Text {
                       textFormat: Text.PlainText
-                      text: root.ytmService && root.ytmService.queueIndex === queueRow.index ? "\uf04b" : (queueRow.index + 1)
+                      text: root.ytmService && root.ytmService.isCurrent(queueRow.modelData.id) ? "\uf04b" : (queueRow.index + 1)
                       color: root.bar.foreground
                       font.family: root.bar.fontFamily
-                      font.pixelSize: root.ytmService && root.ytmService.queueIndex === queueRow.index ? Style.font.body : Style.font.caption
+                      font.pixelSize: root.ytmService && root.ytmService.isCurrent(queueRow.modelData.id) ? Style.font.body : Style.font.caption
                       width: Style.space(20)
                       horizontalAlignment: Text.AlignHCenter
                       anchors.verticalCenter: parent.verticalCenter
                     }
 
                     Column {
-                      width: parent.width - Style.space(28) - Style.space(24)
+                      width: parent.width - Style.space(100)
                       anchors.verticalCenter: parent.verticalCenter
                       spacing: 1
 
@@ -502,7 +653,7 @@ BarWidget {
                         color: root.bar.foreground
                         font.family: root.bar.fontFamily
                         font.pixelSize: Style.font.bodySmall
-                        font.bold: root.ytmService && root.ytmService.queueIndex === queueRow.index
+                        font.bold: root.ytmService && root.ytmService.isCurrent(queueRow.modelData.id)
                         elide: Text.ElideRight
                         width: parent.width
                       }
@@ -515,6 +666,27 @@ BarWidget {
                         font.pixelSize: Style.font.caption
                         elide: Text.ElideRight
                         width: parent.width
+                      }
+                    }
+
+                    Text {
+                      textFormat: Text.PlainText
+                      text: "\uf006"
+                      color: qStarMouse.containsMouse ? root.bar.foreground : Qt.darker(root.bar.foreground, 1.5)
+                      font.family: root.bar.fontFamily
+                      font.pixelSize: Style.font.body
+                      anchors.verticalCenter: parent.verticalCenter
+                      width: Style.space(20)
+                      horizontalAlignment: Text.AlignHCenter
+
+                      MouseArea {
+                        id: qStarMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: {
+                          if (root.ytmService) root.ytmService.toggleFavorite(queueRow.modelData)
+                        }
                       }
                     }
 
@@ -533,7 +705,7 @@ BarWidget {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: if (root.ytmService) root.ytmService.removeFromQueue(queueRow.index)
+                        onClicked: if (root.ytmService) root.ytmService.removeFromQueueById(queueRow.modelData.id)
                       }
                     }
                   }
@@ -541,13 +713,13 @@ BarWidget {
                   MouseArea {
                     id: qMouse
                     anchors.fill: parent
-                    anchors.rightMargin: Style.space(24)
+                    anchors.rightMargin: Style.space(52)
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: {
-                      if (root.ytmService && root.ytmService.queueIndex !== queueRow.index) {
-                        root.ytmService.queueIndex = queueRow.index
-                        var item = root.ytmService.queue[queueRow.index]
+                      if (root.ytmService && !root.ytmService.isCurrent(queueRow.modelData.id)) {
+                        root.ytmService.queueIndex = root.ytmService.queueIndexOf(queueRow.modelData.id)
+                        var item = root.ytmService.queue[root.ytmService.queueIndexOf(queueRow.modelData.id)]
                         if (item) root.ytmService.playUrl(item.url, item.title, item.channel)
                       }
                     }
@@ -559,8 +731,8 @@ BarWidget {
 
           Item {
             width: parent.width
-            height: (!root.ytmService || !root.ytmService.hasMedia) && searchField.text.length === 0 && (!root.ytmService || !root.ytmService.queue || root.ytmService.queue.length === 0) ? Style.space(60) : 0
-            visible: (!root.ytmService || !root.ytmService.hasMedia) && searchField.text.length === 0 && (!root.ytmService || !root.ytmService.queue || root.ytmService.queue.length === 0)
+            height: (!root.ytmService || !root.ytmService.hasMedia) && searchField.text.length === 0 && (!root.ytmService || !root.ytmService.visibleQueue || root.ytmService.visibleQueue.length === 0) && (!root.ytmService || !root.ytmService.favorites || root.ytmService.favorites.length === 0) ? Style.space(60) : 0
+            visible: (!root.ytmService || !root.ytmService.hasMedia) && searchField.text.length === 0 && (!root.ytmService || !root.ytmService.visibleQueue || root.ytmService.visibleQueue.length === 0) && (!root.ytmService || !root.ytmService.favorites || root.ytmService.favorites.length === 0)
 
             Column {
               anchors.centerIn: parent

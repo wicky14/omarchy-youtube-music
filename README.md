@@ -14,6 +14,9 @@ native audio playback.
 
 - **Search** — type in the popup search field to find songs on YouTube Music
 - **Playback** — play, pause, skip, previous via the popup controls
+- **Favorites** — star any song (from search results or the queue) to pin it to
+  the persistent FAVORITES section at the top of the list. Favorites survive
+  restarts and refreshes until you unstar them.
 - **Queue** — manage your play queue, reorder or remove tracks
 - **Volume** — slider in the popup or scroll wheel on the bar icon
 - **Now Playing** — scrolling title + artist in the bar when music is playing
@@ -39,10 +42,17 @@ native audio playback.
 
 ## Install
 
-From the Omarchy plugin marketplace:
+Recommended — install straight from the marketplace (the widget is placed in
+the bar's right section automatically from `barWidget.defaultSection`):
 
 ```bash
 omarchy plugin add https://github.com/wicky14/omarchy-youtube-music.git --enable --yes
+```
+
+Update to a newer version later:
+
+```bash
+omarchy plugin update omakid.youtube-music --yes
 ```
 
 Or install from a local checkout with the bundled script:

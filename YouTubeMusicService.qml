@@ -31,9 +31,19 @@ Item {
 
   property var queue: []
   property int queueIndex: -1
+  property var favorites: []
+
+  readonly property var visibleQueue: {
+    var out = []
+    for (var i = 0; i < queue.length; i++) {
+      if (!isFavorite(queue[i].id)) out.push(queue[i])
+    }
+    return out
+  }
 
   readonly property string runtimePath: Quickshell.env("XDG_RUNTIME_DIR") + "/omarchy-ytmusic"
   readonly property string statusPath: runtimePath + "/status.json"
+  readonly property string favoritesPath: runtimePath + "/favorites.json"
   readonly property string playerSocket: runtimePath + "/mpv-socket"
   readonly property string playerPidPath: runtimePath + "/mpv.pid"
   readonly property string playerScript: Qt.resolvedUrl("ytmusic-player").toString().replace(/^file:\/\//, "")
@@ -232,6 +242,80 @@ Item {
     queue = []
     queueIndex = -1
     stop()
+  }
+
+  function isFavorite(id) {
+    for (var i = 0; i < favorites.length; i++) {
+      if (favorites[i].id === id) return true
+    }
+    return false
+  }
+
+  function isCurrent(id) {
+    return queueIndex >= 0 && queueIndex < queue.length && queue[queueIndex].id === id
+  }
+
+  function queueIndexOf(id) {
+    for (var i = 0; i < queue.length; i++) {
+      if (queue[i].id === id) return i
+    }
+    return -1
+  }
+
+  function toggleFavorite(item) {
+    if (!item || !item.id) return
+    var favs = []
+    for (var i = 0; i < favorites.length; i++) {
+      if (favorites[i].id !== item.id) favs.push(favorites[i])
+    }
+    if (favs.length === favorites.length) {
+      // Not favorited yet: append so newer favorites stack below older ones.
+      favs.push({
+        id: item.id,
+        title: item.title || "Unknown",
+        channel: item.channel || "Unknown",
+        duration: item.duration || 0,
+        thumbnail: item.thumbnail || "",
+        url: item.url || "",
+        viewCount: item.viewCount || 0
+      })
+    }
+    favorites = favs
+    writeFavorites()
+  }
+
+  function removeFromQueueById(id) {
+    var idx = queueIndexOf(id)
+    if (idx >= 0) removeFromQueue(idx)
+  }
+
+  function playFavorite(item) {
+    if (!item || !item.id) return
+    var idx = queueIndexOf(item.id)
+    if (idx >= 0) {
+      playItem(item, idx)
+      return
+    }
+    // Favorite is not part of the current queue: bring it in and play it.
+    var newQueue = []
+    for (var i = 0; i < queue.length; i++) {
+      if (queue[i].id !== item.id) newQueue.push(queue[i])
+    }
+    newQueue.unshift(item)
+    queue = newQueue
+    queueIndex = 0
+    playUrl(item.url, item.title, item.channel)
+  }
+
+  function loadFavorites(text) {
+    var arr
+    try { arr = JSON.parse(String(text || "") || "[]") } catch (e) { arr = [] }
+    if (Array.isArray(arr)) root.favorites = arr
+  }
+
+  function writeFavorites() {
+    ensureRuntimeDir()
+    favoritesFile.setText(JSON.stringify(favorites) + "\n")
   }
 
   function sendMpvCommand(args) {
@@ -471,6 +555,16 @@ Item {
     onFileChanged: reload()
   }
 
+  FileView {
+    id: favoritesFile
+    path: root.statusReady ? root.favoritesPath : ""
+    watchChanges: true
+    atomicWrites: true
+    printErrors: false
+    onLoaded: root.loadFavorites(text())
+    onFileChanged: reload()
+  }
+
   IpcHandler {
     target: "youtube-music"
 
@@ -533,6 +627,7 @@ Item {
     command: ["mkdir", "-p", root.runtimePath]
     onExited: function(code) {
       root.statusReady = true
+      root.favoritesInitProc.running = true
       // After a restart there is no playProc running. Detect whether a
       // detached mpv survived; if so, reconnect to it and restore state.
       if (!playProc.running) {
@@ -559,6 +654,16 @@ Item {
         root.queue = []
         root.queueIndex = -1
       }
+    }
+  }
+
+  // Load persisted favorites (independent of player/queue state).
+  Process {
+    id: favoritesInitProc
+    command: ["cat", root.favoritesPath]
+    stdout: StdioCollector {
+      waitForEnd: true
+      onStreamFinished: root.loadFavorites(text)
     }
   }
 
