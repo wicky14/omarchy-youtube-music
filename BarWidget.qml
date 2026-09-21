@@ -250,12 +250,13 @@ BarWidget {
           boundsBehavior: Flickable.StopAtBounds
           interactive: contentHeight > height
           ScrollBar.vertical: ScrollBar {
+            id: vScroll
             policy: panelScroll.contentHeight > panelScroll.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
           }
 
           Column {
             id: scrollContent
-            width: parent.width
+            width: parent.width - (vScroll.visible ? vScroll.width + Style.space(2) : 0)
             spacing: 0
 
           Item {
