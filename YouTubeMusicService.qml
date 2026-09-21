@@ -627,7 +627,7 @@ Item {
     command: ["mkdir", "-p", root.runtimePath]
     onExited: function(code) {
       root.statusReady = true
-      root.favoritesInitProc.running = true
+      favoritesInitProc.running = true
       // After a restart there is no playProc running. Detect whether a
       // detached mpv survived; if so, reconnect to it and restore state.
       if (!playProc.running) {
