@@ -250,13 +250,12 @@ BarWidget {
           boundsBehavior: Flickable.StopAtBounds
           interactive: contentHeight > height
           ScrollBar.vertical: ScrollBar {
-            id: vScroll
             policy: panelScroll.contentHeight > panelScroll.height ? ScrollBar.AsNeeded : ScrollBar.AlwaysOff
           }
 
           Column {
             id: scrollContent
-            width: parent.width - (vScroll.visible ? vScroll.width + Style.space(2) : 0)
+            width: parent.width
             spacing: 0
 
           Item {
@@ -514,7 +513,7 @@ BarWidget {
                     }
 
                     Column {
-                      width: parent.width - Style.space(48)
+                      width: parent.width - Style.space(100)
                       anchors.verticalCenter: parent.verticalCenter
                       spacing: 1
 
@@ -559,6 +558,11 @@ BarWidget {
                           if (root.ytmService) root.ytmService.toggleFavorite(favRow.modelData)
                         }
                       }
+                    }
+
+                    Item {
+                      width: Style.space(20)
+                      height: 1
                     }
                   }
 
