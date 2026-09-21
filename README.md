@@ -1,6 +1,6 @@
 # omakid.youtube-music
 
-<img width="517" height="644" alt="image" src="https://github.com/user-attachments/assets/2315fbd3-0230-4461-890e-6892e769b9e5" />
+<img width="571" height="597" alt="ymusic" src="https://github.com/user-attachments/assets/cd3839be-6611-45b6-893b-a23ee9653311" />
 
 
 
