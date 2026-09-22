@@ -99,8 +99,9 @@ PY
   # Rescan plugins
   omarchy-shell shell rescanPlugins >/dev/null 2>&1 || true
 
-  # Clean up runtime files
+  # Clean up runtime and persistent state files
   rm -rf "$XDG_RUNTIME_DIR/omarchy-ytmusic" 2>/dev/null || true
+  rm -rf "${XDG_STATE_HOME:-$HOME/.local/state}/omarchy-ytmusic" 2>/dev/null || true
 
   echo
   echo "Done. $PLUGIN_ID has been uninstalled."

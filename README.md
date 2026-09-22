@@ -15,8 +15,9 @@ native audio playback.
 - **Search** — type in the popup search field to find songs on YouTube Music
 - **Playback** — play, pause, skip, previous via the popup controls
 - **Favorites** — star any song (from search results or the queue) to pin it to
-  the persistent FAVORITES section at the top of the list. Favorites survive
-  restarts and refreshes until you unstar them.
+  the persistent FAVORITES section at the top of the list. Favorites are stored
+  in `~/.local/state/omarchy-ytmusic/favorites.json`, so they survive restarts,
+  reboots, and updates until you unstar them.
 - **Queue** — manage your play queue, reorder or remove tracks
 - **Volume** — slider in the popup or scroll wheel on the bar icon
 - **Now Playing** — scrolling title + artist in the bar when music is playing

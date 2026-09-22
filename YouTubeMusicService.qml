@@ -43,7 +43,15 @@ Item {
 
   readonly property string runtimePath: Quickshell.env("XDG_RUNTIME_DIR") + "/omarchy-ytmusic"
   readonly property string statusPath: runtimePath + "/status.json"
-  readonly property string favoritesPath: runtimePath + "/favorites.json"
+  // Favorites persist across reboots, so they must NOT live in the runtime
+  // dir (tmpfs, wiped on every boot). Use the XDG state dir instead.
+  readonly property string stateDir: {
+    var s = Quickshell.env("XDG_STATE_HOME")
+    return (s && s.length > 0) ? s : Quickshell.env("HOME") + "/.local/state"
+  }
+  readonly property string favoritesDir: stateDir + "/omarchy-ytmusic"
+  readonly property string favoritesPath: favoritesDir + "/favorites.json"
+  readonly property string legacyFavoritesPath: runtimePath + "/favorites.json"
   readonly property string playerSocket: runtimePath + "/mpv-socket"
   readonly property string playerPidPath: runtimePath + "/mpv.pid"
   readonly property string playerScript: Qt.resolvedUrl("ytmusic-player").toString().replace(/^file:\/\//, "")
@@ -424,7 +432,7 @@ Item {
 
   Process {
     id: mkdirProc
-    command: ["mkdir", "-p", root.runtimePath]
+    command: ["mkdir", "-p", root.runtimePath, root.favoritesDir]
   }
 
   Process {
@@ -624,7 +632,7 @@ Item {
 
   Process {
     id: statusInitProc
-    command: ["mkdir", "-p", root.runtimePath]
+    command: ["mkdir", "-p", root.runtimePath, root.favoritesDir]
     onExited: function(code) {
       root.statusReady = true
       favoritesInitProc.running = true
@@ -657,10 +665,12 @@ Item {
     }
   }
 
-  // Load persisted favorites (independent of player/queue state).
+  // Load persisted favorites (independent of player/queue state). First-run
+  // migration: if the persistent file is missing but a favorites.json survived
+  // in the old runtime dir, carry it over.
   Process {
     id: favoritesInitProc
-    command: ["cat", root.favoritesPath]
+    command: ["sh", "-c", "if [ ! -s \"$2\" ] && [ -s \"$1\" ]; then cp \"$1\" \"$2\"; fi; cat \"$2\"", "ytmusic-migrate", root.legacyFavoritesPath, root.favoritesPath]
     stdout: StdioCollector {
       waitForEnd: true
       onStreamFinished: root.loadFavorites(text)
